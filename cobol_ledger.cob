@@ -1,104 +1,114 @@
        IDENTIFICATION DIVISION.
        PROGRAM-ID. CobolLedger.
        AUTHOR. Christofer Koch.
+       DATE-COMPILED.
 
        ENVIRONMENT DIVISION.
        INPUT-OUTPUT SECTION.
        FILE-CONTROL.
-           SELECT LedgerFile ASSIGN TO LedgerFileName
+           SELECT LEDGERFILE ASSIGN TO LEDGERFILENAME
                ORGANIZATION IS LINE SEQUENTIAL.
-           SELECT LedgerReport ASSIGN TO ReportName
+           SELECT LEDGERREPORT ASSIGN TO REPORTNAME
                ORGANIZATION IS SEQUENTIAL.
        DATA DIVISION.
        FILE SECTION.
-       FD LedgerFile.
-       01 RecordLine.
-           88 EndOfFile            VALUE HIGH-VALUES.
-           02 TransactionDate      PIC X(5).
-           02 TransactionStatus    PIC X.
-           02 TransactionCode      PIC X(10).
-           02 TransactionDesc      PIC X(30).
-           02 TransactionLines.
-               03 GeneraAccount    PIC X(10).
-               03 SpeciesAccount   PIC X(10).
-               03 SpecificAccount  PIC X(20).
-               03 LineAmount       PIC 9(9)V99.
+       FD LEDGERFILE.
+       01 RECORDLINE.
+           88 ENDOFFILE            VALUE HIGH-VALUES.
+           05 TYPECODE             PIC X.
+               88 COMMENT          VALUE ";".
+               88 DATELINE         PIC 9.
+               88 TRANSACTIONLINE  VALUE " ".
+           05 TRANSACTIONDATE      PIC X(5).
+           05 TRANSACTIONSTATUS    PIC X.
+           05 TRANSACTIONCODE      PIC X(10).
+           05 TRANSACTIONDESC      PIC X(30).
+
+       01 TRANSACTIONLINES.
+           05 TYPECODE             PIC X.
+           05 GENERAACCOUNT        PIC X(10).
+           05 SPECIESACCOUNT       PIC X(10).
+           05 SPECIFICACCOUNT      PIC X(20).
+           05 LINEAMOUNT           PIC 9(9)V99.
                                         
-       FD LedgerReport.
-       01 PrintLine                PIC X(50).
+       FD LEDGERREPORT.
+       01 PRINTLINE                PIC X(50).
 
        WORKING-STORAGE SECTION.
-       01 CommandLineArgs  PIC X(30).
-       01 NumOfArgs        PIC 99.
-       01 LedgerFileName   PIC X(30).
-       01 ReportType       PIC X(10).
-       01 Filters          PIC X(50).
-       01 FilterPtr        PIC 99 VALUE 1.
-       01 ReportName       PIC X(30).
-       01 CurrentDate      PIC X(8).
-       01 ReportTotal      PIC $$$,$$$,$$9.99.
+       01 COMMANDLINEARGS          PIC X(30).
+       01 NUMOFARGS                PIC 99.
+       01 LEDGERFILENAME           PIC X(30).
+       01 REPORTTYPE               PIC X(10).
+       01 PRINTREPORT              PIC X VALUE "F".
+       01 FILTERS                  PIC X(50).
+       01 FILTERPTR                PIC 99 VALUE 1.
+       01 REPORTNAME               PIC X(30).
+       01 CURRENTDATE              PIC X(8).
+       01 REPORTTOTAL              PIC $$$,$$$,$$9.99.
        REPORT SECTION.
 
 
        PROCEDURE DIVISION.
-       Main.
-           PERFORM GetCommandLineArgs
+       MAIN.
+           PERFORM GETCOMMANDLINEARGS
 
-           OPEN INPUT LedgerFile
+           OPEN INPUT LEDGERFILE
 
-           ACCEPT CurrentDate FROM DATE YYYYMMDD
+           ACCEPT CURRENTDATE FROM DATE YYYYMMDD
 
-           STRING ReportType DELIMITED BY SPACES
+           STRING REPORTTYPE DELIMITED BY SPACES
                "_report_"
-               CurrentDate
+               CURRENTDATE
                ".rpt"
-               INTO ReportName
+               INTO REPORTNAME
            END-STRING
-           DISPLAY ReportName
+           DISPLAY REPORTNAME
 
-           OPEN OUTPUT LedgerReport
+           OPEN OUTPUT LEDGERREPORT
 
-           EVALUATE ReportType
-               WHEN "balance" PERFORM GenBalanceReport
-               WHEN "register" PERFORM GenRegisterReport
-               WHEN "cleared" PERFORM GenClearedReport
+           EVALUATE REPORTTYPE
+               WHEN "balance" PERFORM GENBALANCEREPORT
+               WHEN "register" PERFORM GENREGISTERREPORT
+               WHEN "cleared" PERFORM GENCLEAREDREPORT
            END-EVALUATE
 
-           CLOSE LedgerFile, LedgerReport
+           CLOSE LEDGERFILE, LEDGERREPORT
                    
            STOP RUN.
 
-       GetCommandLineArgs.
-           ACCEPT NumOfArgs
+       GETCOMMANDLINEARGS.
+           ACCEPT NUMOFARGS
                FROM ARGUMENT-NUMBER
            END-ACCEPT
 
-           SUBTRACT 1 FROM NumOfArgs
+           SUBTRACT 1 FROM NUMOFARGS
 
-           PERFORM NumOfArgs TIMES
-           ACCEPT CommandLineArgs
+           PERFORM NUMOFARGS TIMES
+           ACCEPT COMMANDLINEARGS
                FROM ARGUMENT-VALUE
            END-ACCEPT
                
-           EVALUATE CommandLineArgs
-               WHEN "-f" ACCEPT CommandLineArgs
+           EVALUATE COMMANDLINEARGS
+               WHEN "-f" ACCEPT COMMANDLINEARGS
                        FROM ARGUMENT-VALUE
-                       MOVE CommandLineArgs TO LedgerFileName
+                       MOVE COMMANDLINEARGS TO LEDGERFILENAME
                WHEN "balance"
-                   MOVE CommandLineArgs TO ReportType
+                   MOVE COMMANDLINEARGS TO REPORTTYPE
                WHEN "register"
-                   MOVE CommandLineArgs TO ReportType
+                   MOVE COMMANDLINEARGS TO REPORTTYPE
                WHEN "cleared"
-                   MOVE CommandLineArgs TO ReportType
-               WHEN OTHER STRING CommandLineArgs   DELIMITED BY SPACES
+                   MOVE COMMANDLINEARGS TO REPORTTYPE
+               WHEN "-print"
+                   MOVE "T" TO PRINTREPORT
+               WHEN OTHER STRING COMMANDLINEARGS   DELIMITED BY SPACES
                        ","                         DELIMITED BY SIZE
-                       INTO Filters WITH POINTER FilterPtr
+                       INTO FILTERS WITH POINTER FILTERPTR
            END-EVALUATE
            END-PERFORM.
 
-       GenBalanceReport.
+       GENBALANCEREPORT.
 
-       GenRegisterReport.
+       GENREGISTERREPORT.
 
-       GenClearedReport.
+       GENCLEAREDREPORT.
                       
