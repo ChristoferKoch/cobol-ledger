@@ -49,11 +49,9 @@
 
 
        PROCEDURE DIVISION.
-       MAIN.
-           PERFORM GETCOMMANDLINEARGS
-
-           OPEN INPUT LEDGERFILE
-
+       0000-MAIN.
+           PERFORM 0100-GETCOMMANDLINEARGS
+               
            ACCEPT CURRENTDATE FROM DATE YYYYMMDD
 
            STRING REPORTTYPE DELIMITED BY SPACES
@@ -62,21 +60,34 @@
                ".rpt"
                INTO REPORTNAME
            END-STRING
-           DISPLAY REPORTNAME
 
-           OPEN OUTPUT LEDGERREPORT
+           OPEN INPUT LEDGERFILE, OUTPUT LEDGERREPORT
+
+           READ LEDGERFILE
+               AT END SET ENDOFFILE TO TRUE
+           END-READ
 
            EVALUATE REPORTTYPE
-               WHEN "balance" PERFORM GENBALANCEREPORT
-               WHEN "register" PERFORM GENREGISTERREPORT
-               WHEN "cleared" PERFORM GENCLEAREDREPORT
-           END-EVALUATE
+               WHEN "balance"
+                   INITIATE BALANCEREPORT
+                   PERFORM 0200-GENBALANCEREPORT
+                       UNTIL ENDOFFILE
+               WHEN "register"
+                   INITIATE REGISTERREPORT
+                   PERFORM 0300-GENREGISTERREPORT
+                       UNTIL ENDOFFILE
+               WHEN "cleared"
+                   INITIATE CLEAREDREPORT
+                   PERFORM 0400-GENCLEAREDREPORT
+                       UNTIL ENDOFFILE
+               WHEN OTHER DISPLAY "Invalid Report Type Given"
+           END-EVALUATE.
 
-           CLOSE LEDGERFILE, LEDGERREPORT
+           CLOSE LEDGERFILE, LEDGERREPORT.
                    
            STOP RUN.
 
-       GETCOMMANDLINEARGS.
+       0100-GETCOMMANDLINEARGS.
            ACCEPT NUMOFARGS
                FROM ARGUMENT-NUMBER
            END-ACCEPT
@@ -106,9 +117,21 @@
            END-EVALUATE
            END-PERFORM.
 
-       GENBALANCEREPORT.
+       0200-GENBALANCEREPORT.                       
+           GENERATE DETAILLINE
+           READ LEDGERFILE
+               AT END SET ENDOFFILE TO TRUE
+           END-READ.
 
-       GENREGISTERREPORT.
-
-       GENCLEAREDREPORT.
+       0300-GENREGISTERREPORT.
+           GENERATE DETAILLINE
+           READ LEDGERFILE
+               AT END SET ENDOFFILE TO TRUE
+           END-READ.
+               
+       0400-GENCLEAREDREPORT.
+           GENERATE DETAILLINE
+           READ LEDGERFILE
+               AT END SET ENDOFFILE TO TRUE
+           END-READ.
                       
