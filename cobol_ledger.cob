@@ -10,6 +10,7 @@
                ORGANIZATION IS LINE SEQUENTIAL.
            SELECT LEDGERREPORT ASSIGN TO REPORTNAME
                ORGANIZATION IS SEQUENTIAL.
+               
        DATA DIVISION.
        FILE SECTION.
        FD LEDGERFILE.
@@ -61,25 +62,19 @@
                INTO REPORTNAME
            END-STRING
 
-           OPEN INPUT LEDGERFILE, OUTPUT LEDGERREPORT
-
-           READ LEDGERFILE
-               AT END SET ENDOFFILE TO TRUE
-           END-READ
-
            EVALUATE REPORTTYPE
                WHEN "balance"
-                   INITIATE BALANCEREPORT
-                   PERFORM 0200-GENBALANCEREPORT
-                       UNTIL ENDOFFILE
+                   CALL "BalanceReport" USING BY REFERENCE LEDGERFILE,
+                       LEDGERREPORT, RECORDLINE, TRANSACTIONLINE
+                       BY CONTENT CURRENTDATE, FILTERS                              
                WHEN "register"
-                   INITIATE REGISTERREPORT
-                   PERFORM 0300-GENREGISTERREPORT
-                       UNTIL ENDOFFILE
+                   CALL "RegisterReport" USING BY REFERENCE LEDGERFILE,
+                       LEDGERREPORT, RECORDLINE, TRANSACTIONLINE
+                       BY CONTENT CURRENTDATE, FILTERS   
                WHEN "cleared"
-                   INITIATE CLEAREDREPORT
-                   PERFORM 0400-GENCLEAREDREPORT
-                       UNTIL ENDOFFILE
+                   CALL "ClearedReport" USING BY REFERENCE LEDGERFILE,
+                       LEDGERREPORT, RECORDLINE, TRANSACTIONLINE
+                       BY CONTENT CURRENTDATE, FILTERS   
                WHEN OTHER DISPLAY "Invalid Report Type Given"
            END-EVALUATE.
 
